@@ -1,16 +1,16 @@
 CXX			= g++
-SOURCES		= main.cpp Database.cpp GameActTypesDbQuery.cpp
+SOURCES		= main.cpp Database.cpp GameActTypesDbQuery.cpp Utility.cpp
 INCLUDES	= -I. -I/usr/include/mysql
 LIBS		+= -L/usr/lib/x86_64-linux-gnu -lmysqlclient -pthread -lm
 OBJECTS		= $(SOURCES:.cpp=.o)
 TARGET		= executable
 
-all: $(SOURCES) $(TARGET)
+all: release
 
-debug:	CXXFLAGS += -DDEBUG -g3 -O0 -Wall -D_GNU_SOURCE -pthread 
+debug:	CXXFLAGS += -DDEBUG -g3 -O0 -Wall -std=c++11 -D_GNU_SOURCE -pthread 
 debug:	$(SOURCES) $(TARGET)
 
-release:	CXXFLAGS += -O3 -Wall -D_GNU_SOURCE -pthread 
+release:	CXXFLAGS += -O3 -Wall -std=c++11 -D_GNU_SOURCE -pthread 
 release:	$(SOURCES) $(TARGET)
 
 $(TARGET): $(OBJECTS) 

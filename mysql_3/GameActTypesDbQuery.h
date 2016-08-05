@@ -36,7 +36,8 @@ class CGameActTypesDbQuery
 {
     public:
         explicit CGameActTypesDbQuery(MYSQL *con);
-        std::string executeQuery(const std::string& dt, const std::string& accountId);
+        std::string getLogText(const std::string& typeId);
+        std::string executeQuery(const std::string& dt, const std::string& accountId, const std::string& logMark, const std::string& paramMark, const std::string& separator);
         ~CGameActTypesDbQuery() {}
 
     private:

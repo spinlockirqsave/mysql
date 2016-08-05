@@ -30,8 +30,8 @@ int main(int argc, char **argv)
     try
     {
         query = new CGameActTypesDbQuery(CDatabase::db_.getConnection());
-        res = query->executeQuery("x", "y");
-        std::cerr << "Query result:\n" << res << std::endl;
+        res = query->executeQuery("2015-03-18 14:31:00", "1521741739113", "#", "::", ";");
+        std::cerr << "Query result:\n[" << res << "]\n";
     } catch (std::exception &e)
     {
         std::cerr << "Exception catched [" << e.what() << "]\n";

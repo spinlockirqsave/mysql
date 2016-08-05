@@ -5,6 +5,11 @@
  */
 
 
+#include <map>
+#include <vector>
+
+
+#include "Utility.h"
 #include "GameActTypesDbQuery.h"
 
 
@@ -16,13 +21,15 @@ CGameActTypesDbQuery::CGameActTypesDbQuery(MYSQL *con) : con_(con)
     }
 }
 
-std::string CGameActTypesDbQuery::executeQuery(const std::string& dt, const std::string& accountId)
+std::string CGameActTypesDbQuery::getLogText(const std::string& typeId)
 {
-    std::string result;
+    std::string result, cmd;
     MYSQL_RES *mysql_result;
     std::stringstream ss;
 
-    if (mysql_query(con_, "SELECT * FROM GameActionsTypes`"))
+    cmd = "SELECT GameActionLogText FROM GameActionsTypes WHERE GameActionTypeID=" + typeId;
+
+    if (mysql_query(con_, cmd.c_str()))
     {
         ss << "Database command execution failed with error [" << mysql_error(con_) <<  "]";
         throw CGameActTypesDbQueryExecuteQueryException(ss.str().c_str());
@@ -35,16 +42,64 @@ std::string CGameActTypesDbQuery::executeQuery(const std::string& dt, const std:
         throw CGameActTypesDbQueryExecuteQueryException(ss.str().c_str());
     }
 
-    int num_fields = mysql_num_fields(mysql_result);
+    MYSQL_ROW row;
+    row = mysql_fetch_row(mysql_result);
+    result = (row[0] ? row[0] : "");
+
+    mysql_free_result(mysql_result);
+    Utility::rtrim(result);
+    return result;
+}
+
+std::string CGameActTypesDbQuery::executeQuery(const std::string& dt, const std::string& accountId, const std::string& logMark, const std::string& paramMark, const std::string& separator)
+{
+    std::string typeId, parameters, logText, mounted, result, cmd;
+    MYSQL_RES *mysql_result;
+    std::stringstream ss;
+    std::multimap<std::string, std::string> typeIdParamsMap; /* key: typeId, value: parameters */
+    std::map<std::string, std::string> logTextMap;
+
+    cmd = "SELECT GameActionTypeID, GameActionParameters FROM GameActionsLog WHERE (AccountID=" 
+        + accountId + ") AND (GameActionDateTime  >='" + dt + "' AND GameActionDateTime <= '" + dt + "')";
+
+    if (mysql_query(con_, cmd.c_str()))
+    {
+        ss << "Database command execution failed with error [" << mysql_error(con_) <<  "]";
+        throw CGameActTypesDbQueryExecuteQueryException(ss.str().c_str());
+    }
+    
+    mysql_result = mysql_store_result(con_);
+    if (mysql_result == NULL)
+    {
+        ss << "Database command execution failed with error [" << mysql_error(con_) << "]";
+        throw CGameActTypesDbQueryExecuteQueryException(ss.str().c_str());
+    }
+
+    /* process the rows, fetch log text if not present in hashtable */
     MYSQL_ROW row;
     while ((row = mysql_fetch_row(mysql_result))) 
     {
-        for (int i = 0; i < num_fields; i++)
+        typeId = (row[0] ? row[0] : "");
+        parameters = (row[1] ? row[1] : "");
+        typeIdParamsMap.insert(std::pair<std::string, std::string>(typeId, parameters));
+    }
+    mysql_free_result(mysql_result);
+
+    /* get log text for all typeIds */
+    for (auto it = typeIdParamsMap.begin(); it != typeIdParamsMap.end(); it = typeIdParamsMap.upper_bound(it->first))
+    {
+        logText = getLogText(it->first); /* get log text */
+        auto range = typeIdParamsMap.equal_range(it->first);
+        for (auto it2 = range.first; it2 != range.second; ++it2)
         {
-            result += (row[i] ? row[i] : "");
+            if ((it2->second).find(paramMark) > 0)
+            {
+                (it2->second) = std::string(paramMark).append(it2->second);
+            }
+            mounted = Utility::mountAll(logText, it2->second, logMark, paramMark);
+            result += mounted + separator;
         }
     }
 
-    mysql_free_result(mysql_result);
     return result;
 }
