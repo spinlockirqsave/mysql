@@ -32,11 +32,24 @@ class CGameActTypesDbQueryExecuteQueryException : public CGameActTypesDbQueryExc
         CGameActTypesDbQueryExecuteQueryException(const std::string& err) : CGameActTypesDbQueryException("Query execution error: [" + err + "]") {}
 };
 
+/*
+ * @brief   Execute queries on database.
+ * NOTE:    this class may throw exceptions
+ */
 class CGameActTypesDbQuery
 {
     public:
         explicit CGameActTypesDbQuery(MYSQL *con);
         std::string getLogText(const std::string& typeId);
+        /*
+         * @brief   Execute queries on database and return log lines containing mounted parameters.
+         * @param   dt - maps to GameActionDateTime,
+         * @param   accountId - maps to AccountID,
+         * @param   logMark - separator of placeholders in log lines,
+         * @param   paramMark - separator of placeholders in parameters list
+         * @param   separator - separates log lines in result string
+         * @details Errors are reported by exceptions derived from CGameActTypesDbQueryException.  
+         */
         std::string executeQuery(const std::string& dt, const std::string& accountId, const std::string& logMark, const std::string& paramMark, const std::string& separator);
         ~CGameActTypesDbQuery() {}
 

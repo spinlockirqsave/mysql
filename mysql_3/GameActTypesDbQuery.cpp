@@ -59,6 +59,7 @@ std::string CGameActTypesDbQuery::executeQuery(const std::string& dt, const std:
     std::multimap<std::string, std::string> typeIdParamsMap; /* key: typeId, value: parameters */
     std::map<std::string, std::string> logTextMap;
 
+    /* get all gameActionTypeID and GameActionParameters for given AccountID and GameActiondateTime */
     cmd = "SELECT GameActionTypeID, GameActionParameters FROM GameActionsLog WHERE (AccountID=" 
         + accountId + ") AND (GameActionDateTime  >='" + dt + "' AND GameActionDateTime <= '" + dt + "')";
 
@@ -85,13 +86,20 @@ std::string CGameActTypesDbQuery::executeQuery(const std::string& dt, const std:
     }
     mysql_free_result(mysql_result);
 
-    /* get log text for all typeIds */
+    /* iterate all buckets and get GameActionlogText for all GameActionTypeIDs,
+     * but make only single database query for each unique GameActionTypeID as we iterate buckets
+     * hashed */
     for (auto it = typeIdParamsMap.begin(); it != typeIdParamsMap.end(); it = typeIdParamsMap.upper_bound(it->first))
     {
-        logText = getLogText(it->first); /* get log text */
-        auto range = typeIdParamsMap.equal_range(it->first);
+        typeId = it->first;
+        logText = getLogText(typeId); /* get log text */
+        auto range = typeIdParamsMap.equal_range(typeId);
         for (auto it2 = range.first; it2 != range.second; ++it2)
         {
+            if (it2->first != typeId) {
+                typeId = it2->first;
+                logText = getLogText(typeId); /* collision, fetch new log text from database */
+            }
             if ((it2->second).find(paramMark) > 0)
             {
                 (it2->second) = std::string(paramMark).append(it2->second);

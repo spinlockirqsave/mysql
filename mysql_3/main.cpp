@@ -1,7 +1,7 @@
 /*
  * @file    main.cpp
  * @author  Piotr Gregor <piotrek.gregor gmail com>
- * @brief   Usage of mysql.
+ * @brief   Example program using CGameActTypesDbQuery.
  */
 
 
@@ -21,12 +21,6 @@ int main(int argc, char **argv)
     CGameActTypesDbQuery *query;
     std::string res;
 
-    /*if (CDatabase::db_.executeQuery("SELECT * FROM GameActionsTypes") == false)
-    {
-        std::cerr << "Database command failed with error [" << CDatabase::db_.errorMessage() << "]\n";
-        exit(EXIT_FAILURE);
-    }
-    std::cerr << "Database query OK\n";*/
     try
     {
         query = new CGameActTypesDbQuery(CDatabase::db_.getConnection());

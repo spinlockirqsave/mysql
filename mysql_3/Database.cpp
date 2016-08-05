@@ -36,7 +36,7 @@ CDatabase::CDatabase(std::string host, std::string user, std::string pass, std::
 CDatabase::~CDatabase()
 {
     if (con_ == NULL) {
-        std::cerr << "Database connection alrady closed\n";
+        std::cerr << "Database connection already closed\n";
         return;
     }
     mysql_close(con_);

@@ -1,0 +1,106 @@
+/*
+ * @file    README
+ * @author  Piotr Gregor <piotrek.gregor gmail com>
+ * @brief   Description of this simple class CGameActTypesDbQuery
+ *          and of the example program using CGameActTypesDbQuery.
+ */
+
+
+CONTENT
+1. Project description
+2. Prerequisites
+3. Classes (and namespaces) description
+3.1 CDatabase class
+3.2 CGameActTypesDbQuery class
+3.3 Utility namespace
+4. Exceptions
+4.1 CGameActTypesDbQueryException and exceptions derived from it
+5. Example program using class CGameActTypesDbQuery
+5.1 Compilation of example program
+
+
+1. Project description
+
+The goal of this project is to fetch the logging information from the database,
+mount parameter's values fetched from GameActionsLog table into log lines
+from GameActionsTypes and to return result as a string separated by specific token. 
+
+
+2. Prerequisites
+
+MySql is used with libmysqlclient as a connector to the database. There must
+be GameActionsLog and GameActionsTypes tables defined in database as
+
+CREATE TABLE `GameActionsLog` (
+  `GameActionID` bigint(12) NOT NULL AUTO_INCREMENT,
+  `GameActionTypeID` int(4) DEFAULT NULL,
+  `AccountID` varchar(16) NOT NULL,
+  `GameActionDateTime` datetime DEFAULT NULL,
+  `GameActionParameters` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`GameActionID`),
+  KEY `GameActionTypeID` (`GameActionTypeID`),
+  KEY `AccountID` (`AccountID`),
+  KEY `GameActionDateTime_idx` (`GameActionDateTime`)
+) ENGINE=InnoDB AUTO_INCREMENT=5669987800 DEFAULT CHARSET=latin1
+
+CREATE TABLE `GameActionsTypes` (
+  `GameActionTypeID` int(4) NOT NULL AUTO_INCREMENT,
+  `GameActionName` varchar(32) DEFAULT NULL,
+  `GameActionLogText` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`GameActionTypeID`)
+) ENGINE=InnoDB AUTO_INCREMENT=261 DEFAULT CHARSET=latin1
+
+or the exception will be thrown.
+
+
+3. Classes (and namespaces) description
+
+3.1 CDatabase class
+
+The class CDatabase implements singleton pattern for opening,
+keeping and closing of the MySql connection. It uses libmysqlclient
+as a connector to the database. It has a pointer to MYSQL connector type.
+This class prints "Database connection opened" and "Database connection closed"
+diagnostic messages to standard error. Delete this if you do not want it to print.
+
+3.2 CGameActTypesDbQuery class
+
+This class exposes method
+    std::string executeQuery(const std::string& dt, const std::string& accountId,
+        const std::string& logMark, const std::string& paramMark, const std::string& separator);
+which executes on database queries necessary to mount all parameters to coresponding
+lines from log. For details on arguments meaning please check CGameActTypesDbQuery.h file.
+
+3.3 Utility namespace
+
+Provides simple helper methods, operations on strings.
+
+
+4. Exceptions
+
+CGameActTypesDbQuery class throws exceptions for reporting of errors.
+
+4.1 CGameActTypesDbQueryException and exceptions derived from it
+
+Exceptions inherit publicly from std::runtime_error.
+
+
+5. Example program using class CGameActTypesDbQuery
+
+Attached in main.cpp is a simple example using CGameActTypesDbQuery.
+This program executes query to get all log lines for account 1521741739113
+and datestamp 2015-03-18 14:31:00:
+    res = query->executeQuery("2015-03-18 14:31:00", "1521741739113", "#", "::", ";")
+Placeholders in log are supposed to be delimited by "#" while parameters by "::".
+The lines created with mounted parameters will be separated by ";". Program prints
+result to standard error stream and terminates. Program name is "executable",
+so you run this with
+    ./executable
+
+5.1 Compilation of example program
+Release:
+    make (or make release)
+Debug:
+    make debug
+Clean:
+    make clean
